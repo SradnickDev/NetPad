@@ -15,3 +15,6 @@ Using the local Wi-Fi to play games with up to 20 players. Your game acts as a s
 - UDP for fast communication
 - Web Server, to provide app without any appstore through your game
 - Different examples and utilities
+
+[Read More!](https://sradnickdev.gitbook.io/netpad/)
+### Comming soon...
