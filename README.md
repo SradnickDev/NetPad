@@ -26,7 +26,5 @@ Ideal for any genre, this framework establishes a reliable server-client relatio
 - Android (different devices)
 - Android TV / Receiver
 
-[Documentation, Github]
-
 [Read More!](https://sradnickdev.gitbook.io/netpad/)
 ### Comming soon...
