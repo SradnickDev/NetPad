@@ -1,17 +1,82 @@
 # NetPadBehaviour
 
-The `NetPadBehaviour` class is a custom MonoBehaviour class that helps manage networked GameObjects and provides access to networked input for those objects. It offers additional functionality compared to the standard MonoBehaviour for handling instantiation and removal of networked GameObjects in a multiplayer context.player properties
+The `NetPadBehaviour` class is a custom MonoBehaviour that provides convenient access to NetPad's input system and player management. It serves as a base class for scripts that need to interact with mobile controller input and player-specific data.
 
+## Core Properties
 
+* **IsValid**: Boolean property indicating whether the object is correctly instantiated and connected to a NetPadPlayer
+* **NetPadInput**: Direct access to the networked input system, equivalent to `NetPadPlayer.Input`
+* **NetPadPlayer**: Reference to the associated NetPadPlayer instance that owns this GameObject
 
-* **IsValid**: A property indicating whether the object is correctly instantiated and connected.
-* **NetPadInput**: Provides access to networked input similar to `UnityEngine.Input`.
-* **NetPadPlayer**: Stores a reference to the associated `NetPadPlayer` instance.
-* **OnInstantiateInternal(NetPadPlayer player)**: An internal method called after a GameObject is instantiated with `NetPadPlayer.Instantiate` and triggers the `OnInstantiate()` method.
-* **OnInstantiate()**: A virtual method that can be overridden to perform custom setup after a GameObject is instantiated using `NetPadPlayer.Instantiate`.
-* **OnRemove()**: A virtual method that can be overridden to handle cleanup before a GameObject and related resources are removed when the associated client disconnects.
+## Lifecycle Methods
 
-Any script that lives on a player gameobject can be derive from NetPadBehaviour instead of Monobehaviour.
+* **OnInstantiateInternal(NetPadPlayer player)**: Internal method called automatically after GameObject instantiation via `NetPadPlayer.Instantiate`
+* **OnInstantiate()**: Virtual method for custom initialization logic after proper NetPad instantiation
+* **OnRemove()**: Virtual method for cleanup logic before GameObject removal when client disconnects
 
-A NetPadBehaviour is only valid if the gameobject it is attached to was created through NetPadPlayer.Instantiate.
+## Usage Pattern
+
+### Deriving from NetPadBehaviour
+```csharp
+public class PlayerController : NetPadBehaviour
+{
+    public override void OnInstantiate()
+    {
+        // Custom setup after NetPad instantiation
+        Debug.Log($"Player {NetPadPlayer.PlayerId} connected");
+    }
+    
+    private void Update()
+    {
+        if (!IsValid) return;
+        
+        // Access input directly through NetPadInput
+        var joystick = NetPadInput.GetJoystick("MovementStick");
+        if (joystick.Magnitude > 0.1f)
+        {
+            transform.Translate(joystick.Position * speed * Time.deltaTime);
+        }
+        
+        // Check button input
+        if (NetPadInput.GetButtonDown("JumpButton"))
+        {
+            Jump();
+        }
+    }
+    
+    public override void OnRemove()
+    {
+        // Cleanup before player disconnection
+        SavePlayerData();
+    }
+}
+```
+
+## Instantiation Requirement
+
+**Important**: NetPadBehaviour components are only valid when the GameObject is created through `NetPadPlayer.Instantiate()`. Objects created through standard Unity instantiation methods will have `IsValid = false`.
+
+### Proper Instantiation
+```csharp
+// Server-side player instantiation
+void OnPlayerConnected(NetPadPlayer player)
+{
+    var playerObject = player.Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+    // NetPadBehaviour components on playerObject will now be valid
+}
+```
+
+## Benefits Over MonoBehaviour
+
+- **Automatic Input Access**: No need to manually find or reference NetPadInput
+- **Player Context**: Direct access to the owning NetPadPlayer
+- **Lifecycle Management**: Built-in hooks for instantiation and removal
+- **Validation**: `IsValid` property ensures proper setup before using NetPad features
+
+## Best Practices
+
+- Always check `IsValid` before accessing NetPad-specific functionality
+- Use `OnInstantiate()` for setup that requires NetPad context
+- Implement `OnRemove()` for graceful cleanup on player disconnection
+- Prefer NetPadBehaviour over MonoBehaviour for player-specific scripts
 
